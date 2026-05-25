@@ -72,6 +72,7 @@ type AllowedMessageToNftCollection =
     | ChangeCollectionAdmin
     | PublicMintHero
     | AskToUpdateHero
+    | UpgradeCollection
 
 fun onInternalMessage(in: InMessage) {
     val msg = lazy AllowedMessageToNftCollection.fromSlice(in.body);
@@ -211,6 +212,26 @@ fun onInternalMessage(in: InMessage) {
             assert (in.senderAddress == storage.adminAddress) throw Errors.NotFromAdmin;
             storage.adminAddress = msg.newAdminAddress;
             storage.save();
+        }
+
+        UpgradeCollection => {
+            var storage = lazy NftCollectionStorage.load();
+            assert (in.senderAddress == storage.adminAddress) throw Errors.NotFromAdmin;
+
+            if (msg.newNftItemCode != null) {
+                storage.nftItemCode = msg.newNftItemCode as cell;
+                storage.save();
+            }
+
+            contract.setCodePostponed(msg.newCode);
+
+            val excessesMsg = createMessage({
+                bounce: BounceMode.NoBounce,
+                dest: in.senderAddress,
+                value: 0,
+                body: ReturnExcessesBack { queryId: msg.queryId },
+            });
+            excessesMsg.send(SEND_MODE_CARRY_ALL_REMAINING_MESSAGE_VALUE);
         }
 
         else => {

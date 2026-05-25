@@ -55,6 +55,12 @@ struct (0x00000005) AskToUpdateHero {
     sendExcessesTo: address
 }
 
+struct (0x00000006) UpgradeCollection {
+    queryId: uint64
+    newCode: cell
+    newNftItemCode: cell?
+}
+
 struct (0x0aa2921a) UpdateHero {
     queryId: uint64
     level: uint32

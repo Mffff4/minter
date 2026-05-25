@@ -305,6 +305,43 @@ get fun `test hero: transferable locks transfers`() {
     });
 }
 
+get fun `test collection: admin can upgrade collection`() {
+    val (nftCollection, deployer, _) = setupTest();
+    
+    val newCode = build("NftCollection");
+    val upgradeResult = nftCollection.sendUpgradeCollection(
+        deployer.address,
+        0,
+        newCode,
+        null,
+        { value: ton("0.05"), bounce: true },
+    );
+
+    expect(upgradeResult).toHaveSuccessfulTx<UpgradeCollection>({
+        from: deployer.address,
+        to: nftCollection.address,
+    });
+}
+
+get fun `test collection: hacker cannot upgrade collection`() {
+    val (nftCollection, _, user) = setupTest();
+    
+    val newCode = build("NftCollection");
+    val upgradeResult = nftCollection.sendUpgradeCollection(
+        user.address,
+        0,
+        newCode,
+        null,
+        { value: ton("0.05"), bounce: true },
+    );
+
+    expect(upgradeResult).toHaveFailedTx<UpgradeCollection>({
+        from: user.address,
+        to: nftCollection.address,
+        exitCode: Errors.NotFromAdmin,
+    });
+}
+
 fun setupTest(): (NftCollection, Treasury, Treasury) {
     val deployer = testing.treasury("deployer");
     val user = testing.treasury("user");

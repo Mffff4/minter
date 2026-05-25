@@ -160,6 +160,23 @@ fun NftCollection.sendAskToUpdateHero(
     return net.send(from, genericMsg);
 }
 
+fun NftCollection.sendUpgradeCollection(
+    self,
+    from: address,
+    queryId: uint64,
+    newCode: cell,
+    newNftItemCode: cell?,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: UpgradeCollection { queryId, newCode, newNftItemCode },
+    });
+    return net.send(from, genericMsg);
+}
+
 /// Send message to the contract with a custom body cell
 fun NftCollection.sendAny(
     self,
